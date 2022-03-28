@@ -59,7 +59,8 @@ try:
 except KeyError:
     print("Please make NEST_SOURCE environment variable to point to " +
           "the source tree you want to check!")
-    sys.exit(EXIT_NO_SOURCE)
+    #sys.exit(EXIT_NO_SOURCE)
+    source_dir = "/mnt/d/Projects/nest-simulator"
 
 exclude_dirs = [
     'libltdl',
