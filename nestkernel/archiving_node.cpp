@@ -20,6 +20,8 @@
  *
  */
 
+#include <iomanip>
+
 #include "archiving_node.h"
 
 // Includes from nestkernel:
@@ -88,6 +90,7 @@ nest::ArchivingNode::get_K_value( double t )
   // case when the neuron has not yet spiked
   if ( history_.empty() )
   {
+    std::cout << "get_K_value hsitory empty" << std::endl;
     trace_ = 0.;
     return trace_;
   }
@@ -97,6 +100,7 @@ nest::ArchivingNode::get_K_value( double t )
   int i = history_.size() - 1;
   while ( i >= 0 )
   {
+    //std::cout << "while: i = " << i << ", t = " << t << ", history_[ i ].t_ = " << history_[ i ].t_ << std::endl;
     if ( t - history_[ i ].t_ > kernel().connection_manager.get_stdp_eps() )
     {
       trace_ = ( history_[ i ].Kminus_ * std::exp( ( history_[ i ].t_ - t ) * tau_minus_inv_ ) );
@@ -107,6 +111,7 @@ nest::ArchivingNode::get_K_value( double t )
 
   // this case occurs when the trace was requested at a time precisely at or
   // before the first spike in the history
+  std::cout << "get_K_value trace was requested at a time precisely at or before the first spike in the history" << std::endl;
   trace_ = 0.;
   return trace_;
 }
@@ -161,9 +166,15 @@ nest::ArchivingNode::get_history( double t1,
     *start = *finish;
     return;
   }
+  
   std::deque< histentry >::reverse_iterator runner = history_.rbegin();
   const double t2_lim = t2 + kernel().connection_manager.get_stdp_eps();
   const double t1_lim = t1 + kernel().connection_manager.get_stdp_eps();
+  std::cout << std::setprecision(15)  << "t2 = " << t2 << ", t2_lim = " << t2_lim << ", runner->t_ = " << runner->t_ << ", runner != history_.rend() = " << ( runner != history_.rend() ) << ", runner->t_ >= t2_lim = " << ( runner->t_ >= t2_lim ) << std::endl;
+  if ( runner != history_.rend() )
+  {
+    std::cout << std::setprecision(15) << "last histentry " << runner->t_ << std::endl;
+  }
   while ( runner != history_.rend() and runner->t_ >= t2_lim )
   {
     ++runner;
@@ -215,6 +226,7 @@ nest::ArchivingNode::set_spiketime( Time const& t_sp, double offset )
   {
     last_spike_ = t_sp_ms;
   }
+  adjust_weights();
 }
 
 void
@@ -266,27 +278,36 @@ nest::ArchivingNode::set_status( const DictionaryDatum& d )
 void
 ArchivingNode::add_synapse_to_check( adjustentry& a )
 {
-
-    to_check_idx_++;
-    assert ( to_check_idx_ > -1 && to_check_idx_ < 1000 );
-    to_check_[to_check_idx_] = a;
-    std::cout << "to check " << to_check_[to_check_idx_].t_received_ << std::endl;
+  syns_to_check_.push_back( a );
 }
 
 void
 nest::ArchivingNode::adjust_weights()
 {
-
-  while ( to_check_idx_ > -1 )
+  std::cout << "adjust_weights" << std::endl;
+  for ( auto it = syns_to_check_.begin(); it < syns_to_check_.end(); ++it )
+  {
+    if ( ( it->t_received_ - last_spike_ ) > -1.0 * kernel().connection_manager.get_stdp_eps() )
     {
-      if ( to_check_[to_check_idx_].t_received_ > last_spike_ )
-      {
-        std::cout << "adjust weights\n";
-        //to_check_[to_check_idx_].c_->adjust_weight(to_check_[to_check_idx_], last_spike_);
-		kernel().connection_manager.adjust_weight( to_check_[to_check_idx_], last_spike_ );
-      to_check_idx_--;
-	  }
-   }
+      kernel().connection_manager.adjust_weight( &(*it), last_spike_ );
+    }
+  }
+}
+
+void
+ArchivingNode::reset_syns_to_check()
+{
+  // std::vector< adjustentry > tmp_syns_to_check;
+  // for ( auto it = syns_to_check_.begin(); it < syns_to_check_.end(); ++it )
+  // {
+  //   if ( ( it->t_received_ - Time( Time::step( kernel().simulation_manager.get_slice_origin().get_steps() ) ).get_ms() - kernel().connection_manager.get_min_delay() ) > kernel().connection_manager.get_stdp_eps() )
+  //   {
+  //     tmp_syns_to_check.push_back( *it );
+  //   }
+  // }
+  syns_to_check_.clear();
+  //syns_to_check_.swap( tmp_syns_to_check );
+  //std::cout << "reset_syns_to_check size = " << syns_to_check_.size() << std::endl;
 }
 
 void

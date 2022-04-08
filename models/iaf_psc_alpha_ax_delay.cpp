@@ -372,6 +372,8 @@ iaf_psc_alpha_ax_delay::update( Time const& origin, const long from, const long 
     // log state data
     B_.logger_.record_data( origin.get_steps() + lag );
   }
+
+  reset_syns_to_check();
 }
 
 void

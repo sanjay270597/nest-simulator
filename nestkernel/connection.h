@@ -164,7 +164,7 @@ public:
   /**
    * Adjusting weights if axonal delay is greater than 0 
    */
-  void adjust_weight(const adjustentry& , const double , const CommonSynapseProperties& );
+  void adjust_weight( adjustentry* , const double , const CommonSynapseProperties& );
   
   /**
    * Return the delay of the connection in ms
@@ -392,7 +392,7 @@ Connection< targetidentifierT >::calibrate( const TimeConverter& tc )
 
 template < typename targetidentifierT >
 inline void
-Connection< targetidentifierT >::adjust_weight(const adjustentry& , const double , const CommonSynapseProperties& )
+Connection< targetidentifierT >::adjust_weight( adjustentry*, const double , const CommonSynapseProperties& )
 {
 	throw IllegalConnection( "Not implemented" );
 }

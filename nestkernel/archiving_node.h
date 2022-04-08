@@ -187,8 +187,7 @@ private:
   //adjusting weights for missed spike in axonal delay
   void adjust_weights();
   
-  adjustentry to_check_[1000];
-  long to_check_idx_;
+  std::vector< adjustentry > syns_to_check_;
 
   // spiking history needed by stdp synapses
   std::deque< histentry > history_;
@@ -198,12 +197,6 @@ inline double
 ArchivingNode::get_spiketime_ms() const
 {
   return last_spike_;
-}
-
-inline 
-void ArchivingNode::reset_syns_to_check()
-{
-  to_check_idx_ = -1;
 }
 
 } // of namespace
