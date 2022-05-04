@@ -90,7 +90,7 @@ nest::ArchivingNode::get_K_value( double t )
   // case when the neuron has not yet spiked
   if ( history_.empty() )
   {
-    std::cout << "get_K_value hsitory empty" << std::endl;
+    // std::cout << "get_K_value hsitory empty" << std::endl;
     trace_ = 0.;
     return trace_;
   }
@@ -111,7 +111,7 @@ nest::ArchivingNode::get_K_value( double t )
 
   // this case occurs when the trace was requested at a time precisely at or
   // before the first spike in the history
-  std::cout << "get_K_value trace was requested at a time precisely at or before the first spike in the history" << std::endl;
+  // std::cout << "get_K_value trace was requested at a time precisely at or before the first spike in the history" << std::endl;
   trace_ = 0.;
   return trace_;
 }
@@ -170,10 +170,10 @@ nest::ArchivingNode::get_history( double t1,
   std::deque< histentry >::reverse_iterator runner = history_.rbegin();
   const double t2_lim = t2 + kernel().connection_manager.get_stdp_eps();
   const double t1_lim = t1 + kernel().connection_manager.get_stdp_eps();
-  std::cout << std::setprecision(15)  << "t2 = " << t2 << ", t2_lim = " << t2_lim << ", runner->t_ = " << runner->t_ << ", runner != history_.rend() = " << ( runner != history_.rend() ) << ", runner->t_ >= t2_lim = " << ( runner->t_ >= t2_lim ) << std::endl;
+  // std::cout << std::setprecision(15)  << "t2 = " << t2 << ", t2_lim = " << t2_lim << ", runner->t_ = " << runner->t_ << ", runner != history_.rend() = " << ( runner != history_.rend() ) << ", runner->t_ >= t2_lim = " << ( runner->t_ >= t2_lim ) << std::endl;
   if ( runner != history_.rend() )
   {
-    std::cout << std::setprecision(15) << "last histentry " << runner->t_ << std::endl;
+    // std::cout << std::setprecision(15) << "last histentry " << runner->t_ << std::endl;
   }
   while ( runner != history_.rend() and runner->t_ >= t2_lim )
   {
@@ -284,7 +284,7 @@ ArchivingNode::add_synapse_to_check( adjustentry& a )
 void
 nest::ArchivingNode::adjust_weights()
 {
-  std::cout << "adjust_weights" << std::endl;
+  // std::cout << "adjust_weights" << std::endl;
   for ( auto it = syns_to_check_.begin(); it < syns_to_check_.end(); ++it )
   {
     if ( ( it->t_received_ - last_spike_ ) > -1.0 * kernel().connection_manager.get_stdp_eps() )

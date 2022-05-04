@@ -267,7 +267,7 @@ stdp_pl_synapse_hom_ax_delay< targetidentifierT >::send( Event& e, thread t, con
   std::deque< histentry >::iterator finish;
   target->get_history( t_lastspike_ - dendritic_delay + cp.axonal_delay_, t_spike - dendritic_delay + cp.axonal_delay_, &start, &finish );
 
-  std::cout << std::setprecision(15) << "get_history\t" << t_lastspike_ - dendritic_delay + cp.axonal_delay_ << ", " << t_spike - dendritic_delay + cp.axonal_delay_ << "\t" << ( start != finish) << std::endl;
+  // std::cout << std::setprecision(15) << "get_history\t" << t_lastspike_ - dendritic_delay + cp.axonal_delay_ << ", " << t_spike - dendritic_delay + cp.axonal_delay_ << "\t" << ( start != finish) << std::endl;
   
   // facilitation due to postsynaptic spikes since last pre-synaptic spike
   double minus_dt;
@@ -277,9 +277,9 @@ stdp_pl_synapse_hom_ax_delay< targetidentifierT >::send( Event& e, thread t, con
     // get_history() should make sure that
     // start->t_ > t_lastspike - dendritic_delay, i.e. minus_dt < 0
     assert( minus_dt < -1.0 * kernel().connection_manager.get_stdp_eps() );
-    std::cout << std::setprecision(15) << "facilitation\t" << weight_ << "\t";
+    // std::cout << std::setprecision(15) << "facilitation\t" << weight_ << "\t";
     weight_ = facilitate_( weight_, Kplus_ * std::exp( minus_dt * cp.tau_plus_inv_ ), cp );
-    std::cout << std::setprecision(15) << "\t" << t_lastspike_ + cp.axonal_delay_ << "\t" << start->t_ + dendritic_delay << "\t" << Kplus_ * std::exp( minus_dt * cp.tau_plus_inv_) << "\t" << weight_ << std::endl;
+    // std::cout << std::setprecision(15) << "\t" << t_lastspike_ + cp.axonal_delay_ << "\t" << start->t_ + dendritic_delay << "\t" << Kplus_ * std::exp( minus_dt * cp.tau_plus_inv_) << "\t" << weight_ << std::endl;
     start++;
   }
 
@@ -288,9 +288,9 @@ stdp_pl_synapse_hom_ax_delay< targetidentifierT >::send( Event& e, thread t, con
 
   // depression due to new pre-synaptic spike
   const double K_minus = target->get_K_value( t_spike + cp.axonal_delay_ - dendritic_delay );
-  std::cout << std::setprecision(15) << "depression\t" << weight_ << "\t";
+  // std::cout << std::setprecision(15) << "depression\t" << weight_ << "\t";
   weight_ = depress_( weight_, K_minus, cp );
-  std::cout << std::setprecision(15) << "\t" << t_lastspike_ + cp.axonal_delay_ - minus_dt << "\t" << t_spike + cp.axonal_delay_ << "\t" << K_minus << "\t" << weight_ << std::endl;
+  // std::cout << std::setprecision(15) << "\t" << t_lastspike_ + cp.axonal_delay_ - minus_dt << "\t" << t_spike + cp.axonal_delay_ << "\t" << K_minus << "\t" << weight_ << std::endl;
 
   e.set_receiver( *target );
   e.set_weight( weight_ );
@@ -375,26 +375,31 @@ void stdp_pl_synapse_hom_ax_delay< targetidentifierT >::adjust_weight( adjustent
 
   while ( start != finish )
   {
-    std::cout << std::setprecision(15) << "found missing spike in hist: " << start->t_ << std::endl;
+    //std::cout << std::setprecision(15) << "found missing spike in hist: " << start->t_ << std::endl;
     start++;
   }
 
   // facilitation due to new post-synaptic spike
   const double minus_dt = a->t_lastspike_ + cp.axonal_delay_ - ( missing_spike + dendritic_delay );
-  assert( minus_dt < -1.0 * kernel().connection_manager.get_stdp_eps() );
+  if ( minus_dt >= 0)
+  {
+	  std::cout<< minus_dt <<"\tmissing\t"<< missing_spike <<"\tlast_spike\t"<<a->t_lastspike_<<"\tweight\t"<<ori_weight_<<std::endl;
+	  return;
+  }
+  assert( minus_dt < 0); // -1.0 * kernel().connection_manager.get_stdp_eps() );
   double Kplus_corr = ( Kplus_- 1.0 ) / std::exp( ( a->t_lastspike_ - t_spike ) / cp.tau_plus_ ); //TODO: check with test
-  std::cout << std::setprecision(15) << "adj facilitation\t" << weight_ << "\t";
+  //std::cout << std::setprecision(15) << "adj facilitation\t" << weight_ << "\t";
   weight_ = facilitate_(weight_, Kplus_corr * std::exp( minus_dt / cp.tau_plus_ ), cp );
-  std::cout << std::setprecision(15) << "\t" << a->t_lastspike_ + cp.axonal_delay_ << "\t" << missing_spike + dendritic_delay << "\t" << Kplus_corr * std::exp( minus_dt * cp.tau_plus_inv_) << "\t" << weight_ << std::endl;
+  //std::cout << std::setprecision(15) << "\t" << a->t_lastspike_ + cp.axonal_delay_ << "\t" << missing_spike + dendritic_delay << "\t" << Kplus_corr * std::exp( minus_dt * cp.tau_plus_inv_) << "\t" << weight_ << std::endl;
 
   // update adjustentry in case there are more post spikes
   a->old_weight_ = weight_;
 
   // depression taking into account new post-synaptic spike
   const double K_minus = target->get_K_value( t_spike + cp.axonal_delay_ - dendritic_delay );
-  std::cout << std::setprecision(15) << "adj depression\t" << weight_ << "\t";
+  //std::cout << std::setprecision(15) << "adj depression\t" << weight_ << "\t";
   weight_ = depress_( weight_, K_minus, cp );
-  std::cout << std::setprecision(15) << "\t" << t_lastspike_ + cp.axonal_delay_ - minus_dt << "\t" << t_spike + cp.axonal_delay_ << "\t" << K_minus << "\t" << weight_ << std::endl;
+  //std::cout << std::setprecision(15) << "\t" << t_lastspike_ + cp.axonal_delay_ - minus_dt << "\t" << t_spike + cp.axonal_delay_ << "\t" << K_minus << "\t" << weight_ << std::endl;
 
   SpikeEvent e;
   e.set_receiver( *target );
